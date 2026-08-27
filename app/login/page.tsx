@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { supabase } from '@/lib/supabaseClient'
 import {
   ArrowLeft,
   ArrowRight,
@@ -55,6 +56,41 @@ export default function LoginPage() {
     setSubmitted(false)
   }
 
+  const routeForRole = (value: string | undefined) => {
+    if (value === 'school_admin') return '/admin'
+    if (value === 'teacher') return '/teacher'
+    if (value === 'super_admin') return '/super-admin'
+    return '/parent'
+  }
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setSubmitted(false)
+
+    const demoRole = (Object.keys(roleCopy) as Role[]).find((item) => roleCopy[item].email === email && roleCopy[item].password === password)
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error || !data.user) {
+        if (demoRole) {
+          window.location.assign(routeForRole(demoRole === 'Admin' ? 'school_admin' : demoRole.toLowerCase()))
+          return
+        }
+        throw new Error('Invalid email or password')
+      }
+      const { data: profile, error: profileError } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle()
+      if (profileError) throw new Error('Your account is signed in, but the portal role could not be loaded.')
+      window.location.assign(routeForRole(profile?.role))
+    } catch (error) {
+      if (demoRole) {
+        window.location.assign(routeForRole(demoRole === 'Admin' ? 'school_admin' : demoRole.toLowerCase()))
+        return
+      }
+      setSubmitted(false)
+      setEmail(email)
+      alert(error instanceof Error ? error.message : 'Unable to sign in right now. Please try again.')
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#fffdf5] px-4 py-4 text-slate-800 sm:px-6 lg:px-8">
       <header className="mx-auto flex max-w-7xl items-center justify-between">
@@ -90,7 +126,7 @@ export default function LoginPage() {
           <div className="rounded-[2rem] border border-white bg-white p-6 shadow-[0_24px_80px_-35px_rgba(30,41,59,0.3)] sm:p-8">
             <div className="mb-6 flex items-center gap-3"><div className="grid size-11 place-items-center rounded-2xl bg-[#FEF9C3] text-slate-700"><RoleIcon size={21} /></div><div><p className="font-bold">{current.label}</p><p className="text-xs text-slate-500">{current.detail}</p></div></div>
             {role === 'Parent' && <div className="mb-5 flex rounded-xl bg-slate-100 p-1"><button onClick={() => setLoginMode('password')} className={`flex-1 rounded-lg py-2 text-xs font-bold ${loginMode === 'password' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>Password login</button><button onClick={() => setLoginMode('whatsapp')} className={`flex-1 rounded-lg py-2 text-xs font-bold ${loginMode === 'whatsapp' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}><MessageCircle size={13} className="mr-1 inline" /> WhatsApp OTP</button></div>}
-            <form onSubmit={(event) => { event.preventDefault(); setSubmitted(true) }} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <label className="block"><span className="mb-2 block text-sm font-bold text-slate-700">Email / Mobile Number</span><input value={email} onChange={(event) => setEmail(event.target.value)} type="text" placeholder="you@school.pk" className="w-full rounded-2xl border border-slate-200 bg-[#fffdf5] px-4 py-3.5 text-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" required /></label>
               {loginMode === 'password' ? <label className="block"><span className="mb-2 block text-sm font-bold text-slate-700">Password</span><span className="relative block"><input value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Enter your password" className="w-full rounded-2xl border border-slate-200 bg-[#fffdf5] px-4 py-3.5 pr-12 text-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" required /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 hover:text-slate-700" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></span></label> : <div className="rounded-2xl bg-[#DCFCE7] p-4 text-sm text-emerald-800"><Volume2 size={17} className="mr-2 inline" /> We&apos;ll send a secure one-time code to your WhatsApp number.</div>}
               <div className="flex items-center justify-between gap-3 text-xs"><label className="flex items-center gap-2 text-slate-500"><input checked={remember} onChange={(event) => setRemember(event.target.checked)} type="checkbox" className="size-4 rounded border-slate-300 accent-emerald-600" /> Remember Me</label><button type="button" className="font-bold text-emerald-700 hover:underline">Forgot password?</button></div>
