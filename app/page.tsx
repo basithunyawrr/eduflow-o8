@@ -1,47 +1,72 @@
-export default function Page() {
+'use client'
+
+import { useState } from 'react'
+import {
+  ArrowRight,
+  BarChart3,
+  Bell,
+  BookOpen,
+  Check,
+  ChevronRight,
+  CirclePlay,
+  GraduationCap,
+  Headphones,
+  Menu,
+  MessageCircle,
+  Pause,
+  Play,
+  ShieldCheck,
+  Sparkles,
+  Users,
+  X,
+} from 'lucide-react'
+
+const reviews = [
+  { quote: 'EduFlow gave our teachers their evenings back.', person: 'Dr. Sana Ahmed', role: 'Professor, Karachi' },
+  { quote: 'I finally know how my daughter is doing without chasing updates.', person: 'Ayesha Khan', role: 'Parent, Islamabad' },
+  { quote: 'Fee collection is clear, simple, and actually stress-free now.', person: 'Mr. Hamza Ali', role: 'Teacher, Lahore' },
+]
+
+const portals = {
+  'School Admin': { icon: ShieldCheck, eyebrow: 'A clear view of your whole school', title: 'Run the day, not the paperwork.', copy: 'Bring attendance, fees, announcements, and performance into one calm command center.', stats: [['1,248', 'Active students'], ['96%', 'Fee collection'], ['38', 'Teachers online']], color: 'yellow' },
+  Teacher: { icon: BookOpen, eyebrow: 'Tools that teach with you', title: 'More time for your classroom.', copy: 'Plan lessons, share voice-note diaries, and keep every family in the loop with less effort.', stats: [['24', 'Lessons planned'], ['18', 'Voice notes'], ['100%', 'Parent reach']], color: 'green' },
+  Parent: { icon: Users, eyebrow: 'A window into every win', title: 'Stay close to their journey.', copy: 'See progress, attendance, and school moments in one friendly space made for busy families.', stats: [['98%', 'Attendance'], ['4.8', 'Latest grade'], ['3', 'New updates']], color: 'yellow' },
+}
+
+type PortalName = keyof typeof portals
+
+function PhoneMockup() {
+  const [playing, setPlaying] = useState(false)
   return (
-    <main
-      style={{
-        colorScheme: 'light dark',
-        position: 'relative',
-        display: 'flex',
-        minHeight: '100vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'light-dark(#fff, #000)',
-        color: 'light-dark(#000, #fff)',
-      }}
-    >
-      <svg
-        aria-hidden="true"
-        style={{ width: 80, height: 80 }}
-        width={80}
-        height={80}
-        fill="none"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      >
-        <path
-          d="M14.2 14.2H17V6.9375C17 4.76288 15.2371 3 13.0625 3H5.8V5.8M14.2 14.2V7.79063L7.79062 14.2H14.2ZM14.2 14.2V17H6.9375C4.76288 17 3 15.2371 3 13.0625V5.8H5.8M5.8 5.8V12.2313L12.2313 5.8H5.8Z"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <p
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: 'calc(50% + 56px)',
-          transform: 'translateX(-50%)',
-          whiteSpace: 'nowrap',
-          fontSize: '14px',
-          fontWeight: 500,
-          color: 'light-dark(#71717a, #a1a1aa)',
-        }}
-      >
-        Your v0 generation will show here.
-      </p>
+    <div className="phone-float relative mx-auto w-[276px] sm:w-[310px]">
+      <div className="phone-shell rounded-[3rem] bg-slate-800 p-3 shadow-2xl shadow-slate-900/20">
+        <div className="relative overflow-hidden rounded-[2.35rem] bg-[#fffdf5] px-5 pb-6 pt-4">
+          <div className="mx-auto mb-5 h-1.5 w-20 rounded-full bg-slate-800/80" />
+          <div className="mb-6 flex items-center justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400">Tuesday, 24 June</p><h3 className="mt-1 text-xl font-bold text-slate-800">Good morning, Sara</h3></div><div className="grid size-9 place-items-center rounded-full bg-[#DCFCE7] text-emerald-700"><Bell size={16} /></div></div>
+          <div className="rounded-3xl bg-[#FEF9C3] p-4"><div className="mb-4 flex items-center justify-between"><span className="text-xs font-bold text-slate-600">Report card</span><span className="rounded-full bg-white/70 px-2 py-1 text-[10px] font-bold text-emerald-700">Term 2</span></div><div className="flex items-end justify-between"><div><p className="text-4xl font-bold tracking-tight text-slate-800">A-</p><p className="mt-1 text-xs text-slate-500">Overall performance</p></div><div className="flex h-14 w-14 items-center justify-center rounded-full border-[5px] border-emerald-300 border-r-transparent text-xs font-bold text-emerald-700">87%</div></div></div>
+          <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-[#DCFCE7] p-3"><div className="grid size-9 place-items-center rounded-xl bg-white text-emerald-600"><Check size={18} strokeWidth={3} /></div><div><p className="text-xs font-bold text-slate-700">Excellent attendance</p><p className="text-[10px] text-slate-500">22 of 23 days this month</p></div></div>
+          <div className="mt-4 rounded-2xl bg-slate-800 p-4 text-white"><div className="mb-3 flex items-center gap-2"><div className="grid size-8 place-items-center rounded-full bg-[#FEF9C3] text-slate-700"><Headphones size={15} /></div><div><p className="text-xs font-bold">A note from Ms. Iqra</p><p className="text-[10px] text-slate-400">Today, 10:42 AM</p></div></div><div className="flex items-center gap-3"><button aria-label={playing ? 'Pause voice note' : 'Play voice note'} onClick={() => setPlaying(!playing)} className="grid size-9 shrink-0 place-items-center rounded-full bg-[#DCFCE7] text-emerald-800 transition-transform hover:scale-105">{playing ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}</button><div className="flex flex-1 items-center gap-1">{Array.from({ length: 19 }).map((_, i) => <span key={i} className={`w-1 rounded-full ${i % 3 === 0 ? 'h-3 bg-emerald-300' : i % 2 === 0 ? 'h-5 bg-emerald-200' : 'h-2 bg-slate-500'}`} />)}</div><span className="text-[10px] text-slate-400">0:42</span></div></div>
+          <div className="mt-5 flex justify-around border-t border-slate-100 pt-4 text-slate-300"><BarChart3 size={17} className="text-emerald-500" /><BookOpen size={17} /><MessageCircle size={17} /><Users size={17} /></div>
+        </div>
+      </div>
+      <div className="absolute -right-10 top-28 hidden rounded-2xl bg-white p-3 shadow-xl sm:block"><div className="flex items-center gap-2"><div className="grid size-7 place-items-center rounded-full bg-[#DCFCE7] text-emerald-600"><Check size={14} /></div><div><p className="text-[10px] font-bold text-slate-700">Attendance updated</p><p className="text-[9px] text-slate-400">Just now</p></div></div></div>
+    </div>
+  )
+}
+
+export default function Page() {
+  const [activePortal, setActivePortal] = useState<PortalName>('School Admin')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const portal = portals[activePortal]
+  const PortalIcon = portal.icon
+  return (
+    <main className="min-h-screen overflow-hidden bg-[#fffdf5] text-slate-800">
+      <nav className="sticky top-0 z-50 border-b border-white/70 bg-[#fffdf5]/80 backdrop-blur-xl"><div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8"><a href="#top" className="flex items-center gap-2.5" aria-label="EduFlow home"><span className="grid size-9 place-items-center rounded-xl bg-slate-800 text-[#FEF9C3]"><GraduationCap size={21} /></span><span className="text-lg font-bold tracking-tight">Edu<span className="text-emerald-600">Flow</span></span></a><div className="hidden items-center gap-8 text-sm font-semibold text-slate-500 md:flex"><a href="#demo" className="transition-colors hover:text-slate-800">How it works</a><a href="#pricing" className="transition-colors hover:text-slate-800">Pricing</a><a href="#stories" className="transition-colors hover:text-slate-800">Stories</a></div><div className="hidden items-center gap-3 md:flex"><a href="#login" className="px-3 py-2 text-sm font-semibold text-slate-600">Login</a><a href="#demo" className="rounded-full bg-slate-800 px-5 py-2.5 text-sm font-bold text-white transition-transform hover:-translate-y-0.5">Try Live Demo <ArrowRight className="ml-1 inline" size={15} /></a></div><button className="md:hidden" aria-label={menuOpen ? 'Close menu' : 'Open menu'} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</button></div>{menuOpen && <div className="border-t border-slate-200/70 px-5 py-4 md:hidden"><div className="flex flex-col gap-4 text-sm font-semibold"><a href="#demo" onClick={() => setMenuOpen(false)}>How it works</a><a href="#pricing" onClick={() => setMenuOpen(false)}>Pricing</a><a href="#stories" onClick={() => setMenuOpen(false)}>Stories</a><a href="#demo" className="rounded-full bg-slate-800 px-4 py-3 text-center text-white">Try Live Demo</a></div></div>}</nav>
+      <section id="top" className="mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-16 lg:grid-cols-[1fr_0.9fr] lg:px-8 lg:pb-28 lg:pt-24"><div className="max-w-xl"><div className="mb-6 inline-flex items-center gap-2 rounded-full bg-[#DCFCE7] px-3 py-1.5 text-xs font-bold text-emerald-800"><Sparkles size={14} /> Built for schools that care</div><h1 className="text-balance text-5xl font-bold leading-[1.04] tracking-[-0.05em] text-slate-800 sm:text-6xl lg:text-[70px]">Simplifying school management for <span className="relative inline-block"><span className="relative z-10">people</span><span className="absolute bottom-1 left-0 -z-0 h-3 w-full rounded-full bg-[#FEF9C3]" /></span>.</h1><p className="mt-7 max-w-lg text-pretty text-lg leading-8 text-slate-500">EduFlow brings teachers, admins, and parents onto one beautifully simple platform—so everyone can focus on what really matters: helping students thrive.</p><div className="mt-9 flex flex-col gap-3 sm:flex-row"><a href="#demo" className="rounded-full bg-slate-800 px-6 py-3.5 text-center text-sm font-bold text-white shadow-lg shadow-slate-800/10 transition-transform hover:-translate-y-1">Explore the live demo <ArrowRight className="ml-2 inline" size={16} /></a><a href="#stories" className="rounded-full border border-slate-300 bg-white/50 px-6 py-3.5 text-center text-sm font-bold text-slate-700"><CirclePlay className="mr-2 inline text-emerald-600" size={17} /> See how it works</a></div><div className="mt-8 flex items-center gap-3 text-xs font-semibold text-slate-400"><div className="flex -space-x-2"><span className="grid size-7 place-items-center rounded-full border-2 border-[#fffdf5] bg-[#DCFCE7] text-[10px]">SA</span><span className="grid size-7 place-items-center rounded-full border-2 border-[#fffdf5] bg-[#FEF9C3] text-[10px]">HK</span><span className="grid size-7 place-items-center rounded-full border-2 border-[#fffdf5] bg-slate-200 text-[10px]">MA</span></div> Trusted by 40+ schools across Pakistan</div></div><PhoneMockup /></section>
+      <section id="stories" className="border-y border-slate-200/60 bg-[#FEF9C3]/40 py-5"><div className="marquee-track flex w-max gap-10">{[...reviews, ...reviews].map((review, i) => <div key={`${review.person}-${i}`} className="flex items-center gap-3 whitespace-nowrap text-sm"><span className="text-emerald-700">“</span><span className="font-semibold text-slate-700">{review.quote}</span><span className="text-slate-400">— {review.person}, {review.role.split(', ')[1]}</span><span className="text-emerald-600">✦</span></div>)}</div></section>
+      <section id="demo" className="mx-auto max-w-7xl px-5 py-20 lg:px-8 lg:py-28"><div className="mx-auto max-w-2xl text-center"><p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">One platform, every perspective</p><h2 className="text-balance text-4xl font-bold tracking-[-0.04em] text-slate-800 sm:text-5xl">Your school, in sync.</h2><p className="mt-4 text-lg leading-7 text-slate-500">Explore the tools that make every school day feel a little lighter.</p></div><div className="mt-10 flex flex-wrap justify-center gap-2 rounded-full bg-slate-100/80 p-1.5"><div role="tablist" aria-label="EduFlow portals" className="flex flex-wrap justify-center gap-2">{Object.keys(portals).map((name) => <button role="tab" aria-selected={activePortal === name} key={name} onClick={() => setActivePortal(name as PortalName)} className={`rounded-full px-5 py-2.5 text-sm font-bold transition-all ${activePortal === name ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:text-slate-800'}`}>{name}</button>)}</div></div><div className="mt-8 grid items-center gap-10 rounded-[2.5rem] bg-white p-7 shadow-[0_20px_80px_-35px_rgba(30,41,59,0.25)] sm:p-12 lg:grid-cols-2 lg:p-16"><div><div className={`mb-5 grid size-12 place-items-center rounded-2xl ${portal.color === 'green' ? 'bg-[#DCFCE7] text-emerald-700' : 'bg-[#FEF9C3] text-slate-700'}`}><PortalIcon size={24} /></div><p className="text-sm font-bold text-emerald-600">{portal.eyebrow}</p><h3 className="mt-3 text-3xl font-bold tracking-[-0.04em] sm:text-4xl">{portal.title}</h3><p className="mt-4 max-w-md leading-7 text-slate-500">{portal.copy}</p><a href="#pricing" className="mt-7 inline-flex items-center text-sm font-bold text-slate-800">Explore portal <ChevronRight size={17} className="ml-1 text-emerald-600" /></a></div><div className={`rounded-3xl p-5 ${portal.color === 'green' ? 'bg-[#DCFCE7]' : 'bg-[#FEF9C3]'}`}><div className="mb-5 flex items-center justify-between"><div className="flex items-center gap-2"><div className="grid size-9 place-items-center rounded-xl bg-white"><PortalIcon size={17} className="text-emerald-600" /></div><span className="text-sm font-bold">{activePortal} dashboard</span></div><span className="size-2 rounded-full bg-emerald-500" /></div><div className="grid gap-3 sm:grid-cols-3">{portal.stats.map(([value, label]) => <div key={label} className="rounded-2xl bg-white/70 p-4"><p className="text-2xl font-bold tracking-tight">{value}</p><p className="mt-1 text-[11px] font-semibold text-slate-500">{label}</p></div>)}</div><div className="mt-4 flex items-center justify-between rounded-2xl bg-white/70 p-4"><div><p className="text-xs font-bold">Weekly overview</p><p className="mt-1 text-[10px] text-slate-400">Everything is looking good</p></div><div className="flex items-end gap-1">{[30, 48, 38, 65, 55, 78, 68].map((height, i) => <span key={i} className="w-2 rounded-full bg-emerald-400" style={{ height }} />)}</div></div></div></div></section>
+      <section id="pricing" className="bg-[#DCFCE7]/45 px-5 py-20 lg:px-8 lg:py-28"><div className="mx-auto max-w-7xl"><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">Simple, transparent pricing</p><h2 className="text-4xl font-bold tracking-[-0.04em] sm:text-5xl">Plans that grow with you.</h2></div><p className="max-w-xs text-sm leading-6 text-slate-500">Start small, make a big difference. No hidden fees, ever.</p></div><div className="mt-10 grid gap-5 lg:grid-cols-3">{[{ name: 'Starter', price: '2,500', desc: 'For growing schools taking their first step.', features: ['Up to 1,000 students', 'Attendance & announcements', 'Teacher portal', 'Family updates'] }, { name: 'Pro', price: '5,000', desc: 'For schools ready to bring it all together.', features: ['Everything in Starter', 'Fee challans & collection', 'Audio voice-note diary', 'Priority support'], featured: true }, { name: 'Enterprise', price: '10,000', desc: 'For ambitious multi-campus networks.', features: ['Everything in Pro', 'Multi-campus management', 'AI-powered chat assistant', 'Dedicated onboarding'] }].map((plan) => <div key={plan.name} className={`relative rounded-3xl p-7 ${plan.featured ? 'bg-slate-800 text-white shadow-xl shadow-slate-900/15 lg:-translate-y-3' : 'bg-white text-slate-800'}`}>{plan.featured && <span className="absolute right-6 top-6 rounded-full bg-[#FEF9C3] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-700">Most popular</span>}<p className={`text-sm font-bold ${plan.featured ? 'text-[#DCFCE7]' : 'text-emerald-600'}`}>{plan.name}</p><p className={`mt-5 text-sm ${plan.featured ? 'text-slate-300' : 'text-slate-500'}`}>{plan.desc}</p><div className="mt-6 flex items-baseline gap-1"><span className="text-sm font-bold">Rs.</span><span className="text-4xl font-bold tracking-tight">{plan.price}</span><span className={`text-sm ${plan.featured ? 'text-slate-400' : 'text-slate-400'}`}>/mo</span></div><div className={`my-7 h-px ${plan.featured ? 'bg-white/15' : 'bg-slate-100'}`} /> <ul className="space-y-3">{plan.features.map((feature) => <li key={feature} className="flex items-center gap-2 text-sm"><span className={`grid size-5 place-items-center rounded-full ${plan.featured ? 'bg-[#DCFCE7] text-emerald-800' : 'bg-[#FEF9C3] text-emerald-700'}`}><Check size={12} strokeWidth={3} /></span>{feature}</li>)}</ul><a href="#demo" className={`mt-8 block rounded-full px-4 py-3 text-center text-sm font-bold ${plan.featured ? 'bg-[#DCFCE7] text-slate-800' : 'bg-slate-800 text-white'}`}>Get started <ArrowRight className="ml-1 inline" size={15} /></a></div>)}</div></div></section>
+      <footer className="bg-[#fffdf5] px-5 pb-8 pt-16 lg:px-8"><div className="mx-auto flex max-w-7xl flex-col gap-10 border-b border-slate-200/70 pb-12 sm:flex-row sm:items-end sm:justify-between"><div><a href="#top" className="flex items-center gap-2.5"><span className="grid size-9 place-items-center rounded-xl bg-slate-800 text-[#FEF9C3]"><GraduationCap size={21} /></span><span className="text-lg font-bold">Edu<span className="text-emerald-600">Flow</span></span></a><p className="mt-4 max-w-xs text-sm leading-6 text-slate-500">Making school management feel more human, one classroom at a time.</p></div><div className="flex flex-wrap gap-x-7 gap-y-3 text-sm font-semibold text-slate-500"><a href="#demo">Product</a><a href="#pricing">Pricing</a><a href="#stories">Stories</a><a href="#login">Login</a></div><a href="https://wa.me/923001234567" className="inline-flex items-center gap-2 rounded-full bg-[#DCFCE7] px-5 py-3 text-sm font-bold text-emerald-800"><MessageCircle size={17} /> WhatsApp support</a></div><div className="mx-auto flex max-w-7xl flex-col gap-2 pt-6 text-xs text-slate-400 sm:flex-row sm:justify-between"><span>© 2026 EduFlow. Built for better school days.</span><span>Made with care in Pakistan.</span></div></footer>
     </main>
   )
 }
