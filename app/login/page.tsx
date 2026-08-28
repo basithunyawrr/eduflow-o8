@@ -29,6 +29,7 @@ export default function LoginPage() {
   const [remember, setRemember] = useState(true)
   const [language, setLanguage] = useState<'EN' | 'اردو'>('EN')
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const fillDemo = (demoRole: keyof typeof demoCredentials) => {
     const demo = demoCredentials[demoRole]
@@ -39,12 +40,17 @@ export default function LoginPage() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (loading) return
+
+    setLoading(true)
     setSubmitted(false)
 
-    const normalizedEmail = email.trim().toLowerCase()
-    const demoRole = (Object.keys(demoCredentials) as Array<keyof typeof demoCredentials>).find((item) => demoCredentials[item].email === normalizedEmail && demoCredentials[item].password === password)
+    const emailLower = email.toLowerCase().trim()
+    const demoRole = (Object.keys(demoCredentials) as Array<keyof typeof demoCredentials>).find((item) => demoCredentials[item].email === emailLower && demoCredentials[item].password === password)
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email: emailLower, password })
+
       if (error || !data.user) {
         if (demoRole) {
           window.location.href = demoCredentials[demoRole].route
@@ -58,20 +64,29 @@ export default function LoginPage() {
         .select('role')
         .eq('id', data.user.id)
         .single()
-      if (profileError) throw new Error('Your account is signed in, but the portal role could not be loaded.')
 
-      const role = profile?.role
-      if (role === 'super_admin' || normalizedEmail === 'basithadi@gmail.com') {
-        window.location.href = '/super-admin'
-      } else if (role === 'school_admin' || normalizedEmail.includes('admin')) {
-        window.location.href = '/admin'
-      } else if (role === 'teacher' || normalizedEmail.includes('teacher')) {
-        window.location.href = '/teacher'
-      } else if (role === 'parent' || role === 'student' || normalizedEmail.includes('parent')) {
-        window.location.href = '/parent'
-      } else {
-        throw new Error('Your account does not have an assigned portal role.')
+      if (profileError) {
+        throw new Error('Your account is signed in, but the portal role could not be loaded.')
       }
+
+      if (profile?.role === 'super_admin' || emailLower === 'basithadi@gmail.com') {
+        window.location.href = '/super-admin'
+        return
+      }
+      if (profile?.role === 'school_admin' || emailLower.includes('admin')) {
+        window.location.href = '/admin'
+        return
+      }
+      if (profile?.role === 'teacher' || emailLower.includes('teacher')) {
+        window.location.href = '/teacher'
+        return
+      }
+      if (profile?.role === 'parent' || profile?.role === 'student' || emailLower.includes('parent') || emailLower.includes('student')) {
+        window.location.href = '/parent'
+        return
+      }
+
+      throw new Error('Your account does not have an assigned portal role.')
     } catch (error) {
       if (demoRole) {
         window.location.href = demoCredentials[demoRole].route
@@ -79,6 +94,8 @@ export default function LoginPage() {
       }
       setSubmitted(false)
       alert(error instanceof Error ? error.message : 'Unable to sign in right now. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -117,7 +134,7 @@ export default function LoginPage() {
               <label className="block"><span className="mb-2 block text-sm font-bold text-slate-700">Email / Mobile Number</span><input value={email} onChange={(event) => setEmail(event.target.value)} type="text" placeholder="you@school.pk" className="w-full rounded-2xl border border-slate-200 bg-[#fffdf5] px-4 py-3.5 text-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" required /></label>
               <label className="block"><span className="mb-2 block text-sm font-bold text-slate-700">Password</span><span className="relative block"><input value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Enter your password" className="w-full rounded-2xl border border-slate-200 bg-[#fffdf5] px-4 py-3.5 pr-12 text-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" required /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 hover:text-slate-700" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></span></label>
               <div className="flex items-center justify-between gap-3 text-xs"><label className="flex items-center gap-2 text-slate-500"><input checked={remember} onChange={(event) => setRemember(event.target.checked)} type="checkbox" className="size-4 rounded border-slate-300 accent-emerald-600" /> Remember Me</label><button type="button" className="font-bold text-emerald-700 hover:underline">Forgot password?</button></div>
-              <button type="submit" className="w-full rounded-2xl bg-[#DCFCE7] px-5 py-4 text-sm font-bold text-emerald-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-200">Sign In to Workspace <ArrowRight size={16} className="ml-1 inline" /></button>
+              <button type="submit" disabled={loading} aria-busy={loading} className="w-full rounded-2xl bg-[#DCFCE7] px-5 py-4 text-sm font-bold text-emerald-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-200 disabled:cursor-wait disabled:opacity-70">{loading ? 'Signing you in…' : 'Sign In to Workspace'} <ArrowRight size={16} className="ml-1 inline" /></button>
               {submitted && <p role="status" className="rounded-xl bg-[#FEF9C3] px-3 py-2 text-center text-xs font-bold text-slate-700">Demo credentials accepted. Redirecting to your workspace.</p>}
             </form>
           </div>
