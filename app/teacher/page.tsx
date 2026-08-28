@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { ReportCardModal, type ReportStudent } from '@/components/report-card-modal'
 import {
   BookOpen,
   CheckCircle2,
@@ -93,6 +94,7 @@ export default function TeacherPortal() {
     }))
   )
   const [sendAlert, setSendAlert] = useState(true)
+  const [reportStudent, setReportStudent] = useState<ReportStudent | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const [audioBlobs, setAudioBlobs] = useState<Record<string, Blob>>({})
@@ -486,7 +488,7 @@ export default function TeacherPortal() {
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold">Gradebook / Marks Entry</h2>
-              <button className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700">
+              <button onClick={() => { const student = students[0]; if (student) setReportStudent({ id: student.id, name: student.name, rollNo: student.rollNo, className: selectedClass.split('-')[0], section: selectedClass.split('-')[1] }) }} className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700">
                 <BarChart3 size={16} />
                 Generate Report Cards
               </button>
@@ -535,6 +537,7 @@ export default function TeacherPortal() {
                             {grade}
                           </span>
                         </td>
+                        <td className="px-4 py-3 text-center"><button onClick={() => { const student = students.find((item) => item.id === entry.id); if (student) setReportStudent({ id: student.id, name: student.name, rollNo: student.rollNo, className: selectedClass.split('-')[0], section: selectedClass.split('-')[1] }) }} className="rounded-xl bg-[#fef9c3] px-3 py-2 text-xs font-bold text-slate-800 hover:bg-yellow-200">Generate Report Card</button></td>
                       </tr>
                     )
                   })}
@@ -549,6 +552,7 @@ export default function TeacherPortal() {
           </section>
         )}
       </div>
+      {reportStudent && <ReportCardModal student={reportStudent} onClose={() => setReportStudent(null)} />}
     </main>
   )
 }
