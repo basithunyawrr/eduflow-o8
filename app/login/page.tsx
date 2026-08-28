@@ -37,37 +37,47 @@ export default function LoginPage() {
     setSubmitted(false)
   }
 
-  const routeForRole = (value: string | undefined) => {
-    if (value === 'school_admin') return '/admin'
-    if (value === 'teacher') return '/teacher'
-    if (value === 'super_admin') return '/super-admin'
-    return '/parent'
-  }
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSubmitted(false)
 
-    const demoRole = (Object.keys(demoCredentials) as Array<keyof typeof demoCredentials>).find((item) => demoCredentials[item].email === email && demoCredentials[item].password === password)
+    const normalizedEmail = email.trim().toLowerCase()
+    const demoRole = (Object.keys(demoCredentials) as Array<keyof typeof demoCredentials>).find((item) => demoCredentials[item].email === normalizedEmail && demoCredentials[item].password === password)
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password })
       if (error || !data.user) {
         if (demoRole) {
-          window.location.assign(demoCredentials[demoRole].route)
+          window.location.href = demoCredentials[demoRole].route
           return
         }
         throw new Error('Invalid email or password')
       }
-      const { data: profile, error: profileError } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle()
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
       if (profileError) throw new Error('Your account is signed in, but the portal role could not be loaded.')
-      window.location.assign(routeForRole(profile?.role))
+
+      const role = profile?.role
+      if (role === 'super_admin' || normalizedEmail === 'basithadi@gmail.com') {
+        window.location.href = '/super-admin'
+      } else if (role === 'school_admin' || normalizedEmail.includes('admin')) {
+        window.location.href = '/admin'
+      } else if (role === 'teacher' || normalizedEmail.includes('teacher')) {
+        window.location.href = '/teacher'
+      } else if (role === 'parent' || role === 'student' || normalizedEmail.includes('parent')) {
+        window.location.href = '/parent'
+      } else {
+        throw new Error('Your account does not have an assigned portal role.')
+      }
     } catch (error) {
       if (demoRole) {
-        window.location.assign(routeForRole(demoRole === 'Admin' ? 'school_admin' : demoRole.toLowerCase()))
+        window.location.href = demoCredentials[demoRole].route
         return
       }
       setSubmitted(false)
-      setEmail(email)
       alert(error instanceof Error ? error.message : 'Unable to sign in right now. Please try again.')
     }
   }
