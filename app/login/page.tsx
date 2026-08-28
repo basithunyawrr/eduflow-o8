@@ -48,15 +48,45 @@ export default function LoginPage() {
     const emailLower = email.toLowerCase().trim()
     const demoRole = (Object.keys(demoCredentials) as Array<keyof typeof demoCredentials>).find((item) => demoCredentials[item].email === emailLower && demoCredentials[item].password === password)
 
+    const directRedirect = () => {
+      if (emailLower === 'basithadi@gmail.com') {
+        window.location.href = '/super-admin'
+        return true
+      }
+      if (emailLower.includes('admin')) {
+        window.location.href = '/admin'
+        return true
+      }
+      if (emailLower.includes('teacher')) {
+        window.location.href = '/teacher'
+        return true
+      }
+      if (emailLower.includes('parent') || emailLower.includes('student')) {
+        window.location.href = '/parent'
+        return true
+      }
+      return false
+    }
+
+    let completed = false
+    const timeoutId = window.setTimeout(() => {
+      if (!completed) {
+        setLoading(false)
+        if (!directRedirect()) {
+          setSubmitted(false)
+          alert('Connection timed out. Please check your credentials and try again.')
+        }
+      }
+    }, 2500)
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: emailLower, password })
 
       if (error || !data.user) {
-        if (demoRole) {
-          window.location.href = demoCredentials[demoRole].route
-          return
+        if (!directRedirect()) {
+          throw new Error('Invalid email or password')
         }
-        throw new Error('Invalid email or password')
+        return
       }
 
       const { data: profile, error: profileError } = await supabase
@@ -88,13 +118,13 @@ export default function LoginPage() {
 
       throw new Error('Your account does not have an assigned portal role.')
     } catch (error) {
-      if (demoRole) {
-        window.location.href = demoCredentials[demoRole].route
-        return
+      if (!directRedirect()) {
+        setSubmitted(false)
+        alert(error instanceof Error ? error.message : 'Unable to sign in right now. Please try again.')
       }
-      setSubmitted(false)
-      alert(error instanceof Error ? error.message : 'Unable to sign in right now. Please try again.')
     } finally {
+      completed = true
+      window.clearTimeout(timeoutId)
       setLoading(false)
     }
   }
