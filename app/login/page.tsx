@@ -6,31 +6,23 @@ import { supabase } from '@/lib/supabaseClient'
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   Check,
   Eye,
   EyeOff,
   GraduationCap,
   Headphones,
   LockKeyhole,
-  MessageCircle,
-  ShieldCheck,
   Sparkles,
-  Users,
-  Volume2,
 } from 'lucide-react'
 
-type Role = 'Admin' | 'Teacher' | 'Parent'
+const demoCredentials = {
+  Admin: { email: 'admin@eduflow.pk', password: 'demo-admin-123', route: '/admin' },
+  Teacher: { email: 'teacher@eduflow.pk', password: 'demo-teacher-123', route: '/teacher' },
+  Parent: { email: 'parent@eduflow.pk', password: 'demo-parent-123', route: '/parent' },
+} as const
 
-const roleCopy: Record<Role, { label: string; detail: string; email: string; password: string; icon: typeof ShieldCheck }> = {
-  Admin: { label: 'Admin Login', detail: 'School Owner / Principal', email: 'admin@eduflow.pk', password: 'demo-admin-123', icon: ShieldCheck },
-  Teacher: { label: 'Teacher Login', detail: 'Classroom & attendance', email: 'teacher@eduflow.pk', password: 'demo-teacher-123', icon: BookOpen },
-  Parent: { label: 'Parent / Student Login', detail: 'Family learning space', email: 'parent@eduflow.pk', password: 'demo-parent-123', icon: Users },
-}
 
 export default function LoginPage() {
-  const [role, setRole] = useState<Role>('Admin')
-  const [loginMode, setLoginMode] = useState<'password' | 'whatsapp'>('password')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -38,21 +30,10 @@ export default function LoginPage() {
   const [language, setLanguage] = useState<'EN' | 'اردو'>('EN')
   const [submitted, setSubmitted] = useState(false)
 
-  const current = roleCopy[role]
-  const RoleIcon = current.icon
-
-  const selectRole = (nextRole: Role) => {
-    setRole(nextRole)
-    setLoginMode('password')
-    setSubmitted(false)
-  }
-
-  const fillDemo = (demoRole: Role) => {
-    const demo = roleCopy[demoRole]
-    setRole(demoRole)
+  const fillDemo = (demoRole: keyof typeof demoCredentials) => {
+    const demo = demoCredentials[demoRole]
     setEmail(demo.email)
     setPassword(demo.password)
-    setLoginMode('password')
     setSubmitted(false)
   }
 
@@ -67,12 +48,12 @@ export default function LoginPage() {
     event.preventDefault()
     setSubmitted(false)
 
-    const demoRole = (Object.keys(roleCopy) as Role[]).find((item) => roleCopy[item].email === email && roleCopy[item].password === password)
+    const demoRole = (Object.keys(demoCredentials) as Array<keyof typeof demoCredentials>).find((item) => demoCredentials[item].email === email && demoCredentials[item].password === password)
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error || !data.user) {
         if (demoRole) {
-          window.location.assign(routeForRole(demoRole === 'Admin' ? 'school_admin' : demoRole.toLowerCase()))
+          window.location.assign(demoCredentials[demoRole].route)
           return
         }
         throw new Error('Invalid email or password')
@@ -119,23 +100,18 @@ export default function LoginPage() {
         </section>
 
         <section className="w-full max-w-xl justify-self-center">
-          <div className="mb-8"><p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">Your portal awaits</p><h2 className="text-4xl font-bold tracking-[-0.04em] sm:text-5xl">Sign in to EduFlow.</h2><p className="mt-3 text-slate-500">Choose your role to continue to your school workspace.</p></div>
-          <div role="tablist" aria-label="Login roles" className="mb-6 grid grid-cols-3 gap-1 rounded-2xl bg-slate-100/80 p-1.5">
-            {(Object.keys(roleCopy) as Role[]).map((item) => { const Icon = roleCopy[item].icon; return <button key={item} role="tab" aria-selected={role === item} onClick={() => selectRole(item)} className={`flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl px-2 text-center text-xs font-bold transition-all sm:text-sm ${role === item ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}><Icon size={17} className={role === item ? 'text-emerald-600' : ''} /><span>{roleCopy[item].label}</span></button> })}
-          </div>
+          <div className="mb-8"><p className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">Your portal awaits</p><h2 className="text-4xl font-bold tracking-[-0.04em] sm:text-5xl">Sign In to EduFlow</h2><p className="mt-3 text-slate-500">Enter your credentials to access your workspace.</p></div>
           <div className="rounded-[2rem] border border-white bg-white p-6 shadow-[0_24px_80px_-35px_rgba(30,41,59,0.3)] sm:p-8">
-            <div className="mb-6 flex items-center gap-3"><div className="grid size-11 place-items-center rounded-2xl bg-[#FEF9C3] text-slate-700"><RoleIcon size={21} /></div><div><p className="font-bold">{current.label}</p><p className="text-xs text-slate-500">{current.detail}</p></div></div>
-            {role === 'Parent' && <div className="mb-5 flex rounded-xl bg-slate-100 p-1"><button onClick={() => setLoginMode('password')} className={`flex-1 rounded-lg py-2 text-xs font-bold ${loginMode === 'password' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>Password login</button><button onClick={() => setLoginMode('whatsapp')} className={`flex-1 rounded-lg py-2 text-xs font-bold ${loginMode === 'whatsapp' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500'}`}><MessageCircle size={13} className="mr-1 inline" /> WhatsApp OTP</button></div>}
+            <div className="mb-6 flex items-center gap-3"><div className="grid size-11 place-items-center rounded-2xl bg-[#FEF9C3] text-slate-700"><GraduationCap size={21} /></div><div><p className="font-bold">Unified workspace login</p><p className="text-xs text-slate-500">Your role will be detected automatically</p></div></div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <label className="block"><span className="mb-2 block text-sm font-bold text-slate-700">Email / Mobile Number</span><input value={email} onChange={(event) => setEmail(event.target.value)} type="text" placeholder="you@school.pk" className="w-full rounded-2xl border border-slate-200 bg-[#fffdf5] px-4 py-3.5 text-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" required /></label>
-              {loginMode === 'password' ? <label className="block"><span className="mb-2 block text-sm font-bold text-slate-700">Password</span><span className="relative block"><input value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Enter your password" className="w-full rounded-2xl border border-slate-200 bg-[#fffdf5] px-4 py-3.5 pr-12 text-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" required /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 hover:text-slate-700" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></span></label> : <div className="rounded-2xl bg-[#DCFCE7] p-4 text-sm text-emerald-800"><Volume2 size={17} className="mr-2 inline" /> We&apos;ll send a secure one-time code to your WhatsApp number.</div>}
+              <label className="block"><span className="mb-2 block text-sm font-bold text-slate-700">Password</span><span className="relative block"><input value={password} onChange={(event) => setPassword(event.target.value)} type={showPassword ? 'text' : 'password'} placeholder="Enter your password" className="w-full rounded-2xl border border-slate-200 bg-[#fffdf5] px-4 py-3.5 pr-12 text-sm outline-none transition focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" required /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 hover:text-slate-700" aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></span></label>
               <div className="flex items-center justify-between gap-3 text-xs"><label className="flex items-center gap-2 text-slate-500"><input checked={remember} onChange={(event) => setRemember(event.target.checked)} type="checkbox" className="size-4 rounded border-slate-300 accent-emerald-600" /> Remember Me</label><button type="button" className="font-bold text-emerald-700 hover:underline">Forgot password?</button></div>
-              <button type="submit" className="w-full rounded-2xl bg-[#DCFCE7] px-5 py-4 text-sm font-bold text-emerald-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-200">{loginMode === 'whatsapp' ? 'Send WhatsApp OTP' : 'Sign In to Portal'} <ArrowRight size={16} className="ml-1 inline" /></button>
-              {submitted && <p role="status" className="rounded-xl bg-[#FEF9C3] px-3 py-2 text-center text-xs font-bold text-slate-700">Demo mode: credentials accepted. Welcome to your {role.toLowerCase()} portal.</p>}
+              <button type="submit" className="w-full rounded-2xl bg-[#DCFCE7] px-5 py-4 text-sm font-bold text-emerald-900 shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-200">Sign In to Workspace <ArrowRight size={16} className="ml-1 inline" /></button>
+              {submitted && <p role="status" className="rounded-xl bg-[#FEF9C3] px-3 py-2 text-center text-xs font-bold text-slate-700">Demo credentials accepted. Redirecting to your workspace.</p>}
             </form>
           </div>
-          <div className="mt-6"><p className="mb-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Quick demo access</p><div className="flex flex-wrap justify-center gap-2">{(Object.keys(roleCopy) as Role[]).map((item) => <button key={item} onClick={() => fillDemo(item)} className="rounded-full border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700">Fill {item} Demo</button>)}</div></div>
-          <div className="mt-8 text-center"><Link href="/super-admin" className="text-xs font-bold text-slate-400 underline-offset-4 hover:text-slate-700 hover:underline">Super Admin Portal</Link></div>
+          <div className="mt-6"><p className="mb-3 text-center text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Quick demo access</p><div className="flex flex-wrap justify-center gap-2">{(Object.keys(demoCredentials) as Array<keyof typeof demoCredentials>).map((item) => <button key={item} onClick={() => fillDemo(item)} className="rounded-full border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700">Fill {item} Demo</button>)}</div></div>
         </section>
       </div>
     </main>
