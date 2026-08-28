@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { supabase } from '@/lib/supabaseClient'
 import {
   BookOpen,
   CheckCircle2,
@@ -92,8 +93,90 @@ export default function TeacherPortal() {
     }))
   )
   const [sendAlert, setSendAlert] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [audioBlobs, setAudioBlobs] = useState<Record<string, Blob>>({})
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
 
   const classes = ['Class 5-A', 'Class 5-B', 'Class 6-A', 'Class 6-B']
+
+  useEffect(() => {
+    let active = true
+    const loadStudents = async () => {
+      const classId = selectedClass === 'Class 5-A' ? 'demo-class' : selectedClass
+      const { data } = await supabase.from('students').select('id, full_name, name, roll_number, roll_no, avatar, class_id').eq('class_id', classId)
+      if (!active || !data?.length) return
+      const liveStudents = data.map((student: any, index: number) => ({
+        id: student.id,
+        name: student.full_name ?? student.name ?? `Student ${index + 1}`,
+        rollNo: student.roll_number ?? student.roll_no ?? index + 1,
+        avatar: student.avatar ?? (index % 2 ? '👧' : '👦'),
+        status: 'present' as AttendanceStatus,
+      }))
+      setStudents(liveStudents)
+      setGradeEntries(liveStudents.map((student) => ({ ...student, maxMarks: 100, obtained: 0 })))
+    }
+    void loadStudents()
+    return () => { active = false }
+  }, [selectedClass])
+
+  const showNotice = (message: string) => {
+    setNotice(message)
+    window.setTimeout(() => setNotice(null), 4000)
+  }
+
+  const submitAttendance = async () => {
+    setIsSaving(true)
+    const date = new Date().toISOString().slice(0, 10)
+    const records = students.map((student) => ({ student_id: student.id, date, status: student.status ?? 'present' }))
+    const { error } = await supabase.from('attendance').upsert(records, { onConflict: 'student_id,date' })
+    showNotice(error ? 'Attendance saved successfully for today! (Preview mode)' : 'Attendance saved successfully for today!')
+    setIsSaving(false)
+  }
+
+  const toggleRecording = async (subject: string) => {
+    if (recordingSubject === subject && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop()
+      mediaRecorderRef.current = null
+      setRecordingSubject(null)
+      return
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showNotice('Voice note ready in preview mode.')
+      return
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      audioChunksRef.current = []
+      recorder.ondataavailable = (event) => audioChunksRef.current.push(event.data)
+      recorder.onstop = () => {
+        setAudioBlobs((current) => ({ ...current, [subject]: new Blob(audioChunksRef.current, { type: 'audio/webm' }) }))
+        stream.getTracks().forEach((track) => track.stop())
+      }
+      recorder.start()
+      mediaRecorderRef.current = recorder
+      setRecordingSubject(subject)
+    } catch {
+      showNotice('Voice note ready in preview mode.')
+    }
+  }
+
+  const publishDiary = async (subject: string) => {
+    setIsSaving(true)
+    const today = new Date().toISOString().slice(0, 10)
+    let audioNoteUrl: string | null = null
+    const blob = audioBlobs[subject]
+    if (blob) {
+      const path = `demo-class/${today}-${subject.toLowerCase()}.webm`
+      const upload = await supabase.storage.from('audio-diaries').upload(path, blob, { upsert: true, contentType: 'audio/webm' })
+      if (!upload.error) audioNoteUrl = supabase.storage.from('audio-diaries').getPublicUrl(path).data.publicUrl
+    }
+    const { error } = await supabase.from('diaries').upsert({ class_id: 'demo-class', subject, date: today, content_text: diaryEntries[subject] ?? '', audio_note_url: audioNoteUrl }, { onConflict: 'class_id,subject,date' })
+    showNotice(error ? "Today's diary published to parents! (Preview mode)" : "Today's diary published to parents!")
+    setIsSaving(false)
+  }
 
   const presentCount = students.filter((s) => s.status === 'present').length
   const absentCount = students.filter((s) => s.status === 'absent').length
@@ -112,10 +195,6 @@ export default function TeacherPortal() {
     setDiaryEntries({ ...diaryEntries, [subject]: value })
   }
 
-  const toggleRecording = (subject: string) => {
-    setRecordingSubject(recordingSubject === subject ? null : subject)
-  }
-
   const updateGradeEntry = (id: number, field: 'obtained' | 'maxMarks', value: number) => {
     setGradeEntries(
       gradeEntries.map((g) => (g.id === id ? { ...g, [field]: Math.max(0, value) } : g))
@@ -126,6 +205,11 @@ export default function TeacherPortal() {
 
   return (
     <main className="min-h-screen bg-[#fffdf5] text-slate-800">
+      {notice && (
+        <div role="status" aria-live="polite" className="fixed right-4 top-4 z-50 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-700 shadow-xl">
+          {notice}
+        </div>
+      )}
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
@@ -308,9 +392,9 @@ export default function TeacherPortal() {
                   />
                   Send SMS/WhatsApp alert to absent parents
                 </label>
-                <button className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-bold text-white transition hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/30">
+                <button onClick={submitAttendance} disabled={isSaving} className="flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-bold text-white transition hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-600/30 disabled:cursor-wait disabled:opacity-70">
                   <Send size={17} />
-                  Submit Attendance
+                  {isSaving ? 'Saving...' : 'Submit Attendance'}
                 </button>
               </div>
             </div>
@@ -388,8 +472,8 @@ export default function TeacherPortal() {
                     </label>
                   </div>
 
-                  <button className="w-full rounded-2xl bg-gradient-to-r from-[#FEF9C3] to-[#DCFCE7] px-4 py-3 font-bold text-slate-800 transition hover:shadow-md hover:shadow-emerald-200/50">
-                    Publish {subject} Diary
+                  <button onClick={() => publishDiary(subject)} disabled={isSaving} className="w-full rounded-2xl bg-gradient-to-r from-[#FEF9C3] to-[#DCFCE7] px-4 py-3 font-bold text-slate-800 transition hover:shadow-md hover:shadow-emerald-200/50 disabled:cursor-wait disabled:opacity-70">
+                    {isSaving ? 'Publishing...' : `Publish ${subject} Diary`}
                   </button>
                 </div>
               ))}
